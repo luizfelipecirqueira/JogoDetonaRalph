@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+    }
+  </style>
+  <title>Detona Ralph Game</title>
+</head>
+<body>
+
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+
+      const ralph = {
+        x: 50,
+        y: canvas.height - 50,
+        width: 50,
+        height: 50,
+        color: 'orange',
+        jumping: false,
+        jumpHeight: 100,
+        jumpCount: 0,
+        gravity: 2,
+      };
+
+      const obstacles = [];
+
+      function drawRalph() {
+        ctx.fillStyle = ralph.color;
+        ctx.fillRect(ralph.x, ralph.y, ralph.width, ralph.height);
+      }
+
+      function drawObstacles() {
+        obstacles.forEach(obstacle => {
+          ctx.fillStyle = obstacle.color;
+          ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+        });
+      }
+
+      function update() {
+        // Update Ralph's position
+        if (ralph.jumping) {
+          ralph.y -= 5;
+          ralph.jumpCount++;
+
+          if (ralph.jumpCount >= ralph.jumpHeight / 5) {
+            ralph.jumping = false;
+          }
+        } else if (ralph.y < canvas.height - ralph.height) {
+          ralph.y += ralph.gravity;
+        }
+
+        // Update obstacle positions
+        obstacles.forEach(obstacle => {
+          obstacle.x -= 5;
+
+          // Check for collision with Ralph
+          if (
+            ralph.x < obstacle.x + obstacle.width &&
+            ralph.x + ralph.width > obstacle.x &&
+            ralph.y < obstacle.y + obstacle.height &&
+            ralph.y + ralph.height > obstacle.y
+          ) {
+            alert('Game Over!');
+            resetGame();
+          }
+
+          // Remove off-screen obstacles
+          if (obstacle.x + obstacle.width < 0) {
+            obstacles.shift();
+          }
+        });
+
+        // Add new obstacles
+        if (Math.random() < 0.02) {
+          const obstacle = {
+            x: canvas.width,
+            y: canvas.height - 50,
+            width: 30,
+            height: 30,
+            color: 'red',
+          };
+          obstacles.push(obstacle);
+        }
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawRalph();
+        drawObstacles();
+      }
+
+      function gameLoop() {
+        update();
+        draw();
+        requestAnimationFrame(gameLoop);
+      }
+
+      function resetGame() {
+        ralph.y = canvas.height - 50;
+        obstacles.length = 0; // Clear the obstacles array
+      }
+
+      // Event listener for space key to make Ralph jump
+      document.addEventListener('keydown', function (event) {
+        if (event.code === 'Space' && !ralph.jumping) {
+          ralph.jumping = true;
+          ralph.jumpCount = 0;
+        }
+      });
+
+      // Start the game loop
+      gameLoop();
+    });
+  </script>
+</body>
+</html>
